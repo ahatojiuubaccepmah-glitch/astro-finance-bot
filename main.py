@@ -1,0 +1,1 @@
+print("Astro Finance Bot started")
