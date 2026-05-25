@@ -10,8 +10,9 @@ dp = Dispatcher()
 
 # ✅ подключаем роутеры
 dp.include_router(start.router)
-dp.include_router(menu.router)
 dp.include_router(profile.router)
+dp.include_router(menu.router)
+
 
 async def main():
     await dp.start_polling(bot)
