@@ -1,15 +1,18 @@
-from aiogram import Router
+from aiogram import Router, F
 from aiogram.types import Message
-from aiogram.filters import CommandStart
-
-from keyboards.main_menu import get_main_menu
 
 router = Router()
 
 
-@router.message(CommandStart())
-async def start_handler(message: Message):
-    await message.answer(
-        "Добро пожаловать 🚀",
-        reply_markup=get_main_menu()
-    )
+@router.message(F.text)
+async def menu_handler(message: Message):
+    text = message.text
+
+    if text == "📅 Финансы":
+        await message.answer("Раздел финансов открыт")
+    elif text == "🔮 Натальная карта":
+        await message.answer("Раздел натальной карты")
+    elif text == "👤 Профиль":
+        await message.answer("Твой профиль")
+    else:
+        await message.answer("Не понимаю команду")
