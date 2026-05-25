@@ -6,11 +6,12 @@ import re
 
 from keyboards.profile_menu import get_profile_menu
 from db.database import save_user, get_user, get_city, save_city
+
 from services.geocoder import geocode_city
 from services.timezone_service import get_timezone
 from services.time_converter import convert_to_utc
 from services.julian import to_julian_date
-from services.astrology import calculate_chart
+from services.astro_engine import build_natal_chart
 
 router = Router()
 
@@ -38,7 +39,7 @@ def normalize_date(date: str) -> str:
         return date
 
 
-# ✅ ПРОСМОТР ПРОФИЛЯ
+# ✅ ПРОФИЛЬ
 @router.message(F.text == "👤 Профиль")
 async def profile_handler(message: Message):
     user = get_user(message.from_user.id)
@@ -70,13 +71,23 @@ async def profile_handler(message: Message):
     # ✅ JD
     jd = to_julian_date(utc_data["datetime"])
 
-    # ✅ Астрология
-    chart = calculate_chart(utc_data["datetime"])
+    # ✅ Astro Engine (всё в одном месте)
+    chart = build_natal_chart(
+        utc_data["datetime"],
+        city_data["lat"],
+        city_data["lon"]
+    )
 
-    # ✅ Планеты
+    # ✅ Планеты + дома
     planets_text = "\n".join([
-        f"{name}: {data['sign']} ({data['degree']:.2f}°)"
+        f"{name}: {data['sign']} — дом {data['house']}"
         for name, data in chart["planets"].items()
+    ])
+
+    # ✅ Дома (формат ТЗ)
+    houses_text = "\n".join([
+        f"{name}: {data['formatted']}"
+        for name, data in chart["houses"].items()
     ])
 
     # ✅ Аспекты
@@ -89,16 +100,16 @@ async def profile_handler(message: Message):
         f"🌍 Город: {user['city_name']}\n"
         f"📍 {city_data['lat']} / {city_data['lon']}\n"
         f"🕒 {city_data['timezone']}\n\n"
-        f"🌐 UTC:\n"
-        f"{utc_data['utc_date']} {utc_data['utc_time']}\n\n"
+        f"🌐 UTC:\n{utc_data['utc_date']} {utc_data['utc_time']}\n\n"
         f"🪐 Julian Date:\n{jd:.5f}\n\n"
         f"📊 Планеты:\n{planets_text}\n\n"
+        f"🏠 Дома:\n{houses_text}\n\n"
         f"🔺 Аспекты:\n{aspects_text}",
         reply_markup=get_profile_menu()
     )
 
 
-# ✅ СТАРТ РЕДАКТИРОВАНИЯ
+# ✅ РЕДАКТИРОВАНИЕ
 @router.message(F.text == "✏️ Редактировать")
 async def start_profile_edit(message: Message, state: FSMContext):
     await message.answer(
@@ -165,7 +176,7 @@ async def process_city(message: Message, state: FSMContext):
         await message.answer("❌ Введите город")
         return
 
-    # ✅ ищем в кэше
+    # ✅ проверка кэша
     city_data = get_city(city)
 
     if not city_data:
@@ -187,7 +198,6 @@ async def process_city(message: Message, state: FSMContext):
 
     data = await state.get_data()
 
-    # ✅ сохраняем пользователя
     save_user(
         message.from_user.id,
         data["birth_date"],
@@ -195,40 +205,8 @@ async def process_city(message: Message, state: FSMContext):
         city
     )
 
-    # ✅ UTC
-    utc_data = convert_to_utc(
-        data["birth_date"],
-        data["birth_time"],
-        city_data["timezone"]
-    )
-
-    if not utc_data or "error" in utc_data:
-        await message.answer("❌ Ошибка времени")
-        return
-
-    # ✅ JD
-    jd = to_julian_date(utc_data["datetime"])
-
-    # ✅ Астрология
-    chart = calculate_chart(utc_data["datetime"])
-
-    planets_text = "\n".join([
-        f"{name}: {data['sign']} ({data['degree']:.2f}°)"
-        for name, data in chart["planets"].items()
-    ])
-
-    aspects_text = "\n".join(chart["aspects"]) if chart["aspects"] else "нет"
-
     await message.answer(
-        f"✅ Профиль сохранён\n\n"
-        f"📅 {data['birth_date']}\n"
-        f"⏰ {data['birth_time']}\n"
-        f"🌍 {city}\n"
-        f"🕒 {city_data['timezone']}\n\n"
-        f"🌐 UTC:\n{utc_data['utc_date']} {utc_data['utc_time']}\n\n"
-        f"🪐 Julian Date:\n{jd:.5f}\n\n"
-        f"📊 Планеты:\n{planets_text}\n\n"
-        f"🔺 Аспекты:\n{aspects_text}",
+        "✅ Профиль сохранён",
         reply_markup=get_profile_menu()
     )
 
