@@ -9,6 +9,7 @@ from db.database import save_user, get_user, get_city, save_city
 from services.geocoder import geocode_city
 from services.timezone_service import get_timezone
 from services.time_converter import convert_to_utc
+from services.julian import to_julian_date
 
 router = Router()
 
@@ -59,6 +60,8 @@ async def profile_handler(message: Message):
         user["birth_time"],
         city_data["timezone"]
     )
+
+    jd = to_julian_date(utc_data["datetime"]
 
     await message.answer(
         f"📄 Ваш профиль:\n\n"
@@ -170,6 +173,7 @@ async def process_city(message: Message, state: FSMContext):
         f"🌍 {city}\n"
         f"🕒 {city_data['timezone']}\n"
         f"🌐 {utc_data['utc_time']}",
+	f"🪐 Julian Date:\n{jd:.5f}",
         reply_markup=get_profile_menu()
     )
 
