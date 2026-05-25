@@ -86,7 +86,10 @@ async def profile_handler(message: Message):
 # ✅ START
 @router.message(F.text == "✏️ Редактировать")
 async def start_profile_edit(message: Message, state: FSMContext):
-    await message.answer("📅 Введите дату рождения")
+    await message.answer(    
+	"📅 Введите дату рождения\n\n"
+	"Формат: ДД.ММ.ГГГГ\n"
+	"Пример: 01.01.2000"
     await state.set_state(ProfileForm.birth_date)
 
 
