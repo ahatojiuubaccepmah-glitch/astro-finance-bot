@@ -15,11 +15,6 @@ from services.calendar_png import create_calendar_png
 router = Router()
 
 
-# ✅ DEBUG — ловит ВСЁ (временно!)
-@router.message()
-async def debug_all(message: Message):
-    print("DEBUG TEXT:", message.text)
-
 
 # ✅ Назад
 @router.message(F.text == "⬅️ Назад")
