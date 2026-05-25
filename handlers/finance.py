@@ -21,15 +21,6 @@ async def debug_all(message: Message):
     print("DEBUG TEXT:", message.text)
 
 
-# ✅ Вход в финансы
-@router.message(F.text == "📅 Финансы")
-async def finance_menu(message: Message):
-    await message.answer(
-        "📊 Финансовый раздел",
-        reply_markup=get_finance_menu()
-    )
-
-
 # ✅ Назад
 @router.message(F.text == "⬅️ Назад")
 async def back_to_menu(message: Message):
