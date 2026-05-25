@@ -10,6 +10,7 @@ from services.geocoder import geocode_city
 from services.timezone_service import get_timezone
 from services.time_converter import convert_to_utc
 from services.julian import to_julian_date
+from services.astrology import calculate_chart
 
 router = Router()
 
@@ -37,7 +38,7 @@ def normalize_date(date: str) -> str:
         return date
 
 
-# ✅ ПРОФИЛЬ
+# ✅ ПРОСМОТР ПРОФИЛЯ
 @router.message(F.text == "👤 Профиль")
 async def profile_handler(message: Message):
     user = get_user(message.from_user.id)
@@ -69,6 +70,18 @@ async def profile_handler(message: Message):
     # ✅ JD
     jd = to_julian_date(utc_data["datetime"])
 
+    # ✅ Астрология
+    chart = calculate_chart(utc_data["datetime"])
+
+    # ✅ Планеты
+    planets_text = "\n".join([
+        f"{name}: {data['sign']} ({data['degree']:.2f}°)"
+        for name, data in chart["planets"].items()
+    ])
+
+    # ✅ Аспекты
+    aspects_text = "\n".join(chart["aspects"]) if chart["aspects"] else "нет"
+
     await message.answer(
         f"📄 Ваш профиль:\n\n"
         f"📅 Дата: {user['birth_date']}\n"
@@ -78,19 +91,21 @@ async def profile_handler(message: Message):
         f"🕒 {city_data['timezone']}\n\n"
         f"🌐 UTC:\n"
         f"{utc_data['utc_date']} {utc_data['utc_time']}\n\n"
-        f"🪐 Julian Date:\n{jd:.5f}",
+        f"🪐 Julian Date:\n{jd:.5f}\n\n"
+        f"📊 Планеты:\n{planets_text}\n\n"
+        f"🔺 Аспекты:\n{aspects_text}",
         reply_markup=get_profile_menu()
     )
 
 
-# ✅ START
+# ✅ СТАРТ РЕДАКТИРОВАНИЯ
 @router.message(F.text == "✏️ Редактировать")
 async def start_profile_edit(message: Message, state: FSMContext):
-    await message.answer(    
-	"📅 Введите дату рождения\n\n"
-	"Формат: ДД.ММ.ГГГГ\n"
-	"Пример: 01.01.2000"
-	)
+    await message.answer(
+        "📅 Введите дату рождения\n\n"
+        "Формат: ДД.ММ.ГГГГ\n"
+        "Пример: 01.01.2000"
+    )
     await state.set_state(ProfileForm.birth_date)
 
 
@@ -105,12 +120,18 @@ async def process_birth_date(message: Message, state: FSMContext):
             if not validate_date(date):
                 raise ValueError
         except:
-            await message.answer("❌ Неверный формат даты")
+            await message.answer("❌ Неверный формат даты\nВведите: 01.01.2000")
             return
 
     await state.update_data(birth_date=date)
 
-    await message.answer("⏰ Введите время")
+    await message.answer(
+        "⏰ Введите время рождения\n\n"
+        "Формат: ЧЧ:ММ\n"
+        "Пример: 14:30\n\n"
+        "Если не знаете — напишите: не знаю"
+    )
+
     await state.set_state(ProfileForm.birth_time)
 
 
@@ -122,12 +143,16 @@ async def process_birth_time(message: Message, state: FSMContext):
     if time == "не знаю":
         time = "12:00"
     elif not validate_time(time):
-        await message.answer("❌ Время неверно")
+        await message.answer("❌ Неверный формат времени")
         return
 
     await state.update_data(birth_time=time)
 
-    await message.answer("🌍 Введите город")
+    await message.answer(
+        "🌍 Введите город рождения\n\n"
+        "Пример: Москва"
+    )
+
     await state.set_state(ProfileForm.city)
 
 
@@ -140,10 +165,9 @@ async def process_city(message: Message, state: FSMContext):
         await message.answer("❌ Введите город")
         return
 
-    # ✅ проверяем кэш
+    # ✅ ищем в кэше
     city_data = get_city(city)
 
-    # ✅ если нет — геокодим
     if not city_data:
         geo = geocode_city(city)
 
@@ -178,8 +202,22 @@ async def process_city(message: Message, state: FSMContext):
         city_data["timezone"]
     )
 
+    if not utc_data or "error" in utc_data:
+        await message.answer("❌ Ошибка времени")
+        return
+
     # ✅ JD
     jd = to_julian_date(utc_data["datetime"])
+
+    # ✅ Астрология
+    chart = calculate_chart(utc_data["datetime"])
+
+    planets_text = "\n".join([
+        f"{name}: {data['sign']} ({data['degree']:.2f}°)"
+        for name, data in chart["planets"].items()
+    ])
+
+    aspects_text = "\n".join(chart["aspects"]) if chart["aspects"] else "нет"
 
     await message.answer(
         f"✅ Профиль сохранён\n\n"
@@ -187,9 +225,10 @@ async def process_city(message: Message, state: FSMContext):
         f"⏰ {data['birth_time']}\n"
         f"🌍 {city}\n"
         f"🕒 {city_data['timezone']}\n\n"
-        f"🌐 UTC:\n"
-        f"{utc_data['utc_time']}\n\n"
-        f"🪐 Julian Date:\n{jd:.5f}",
+        f"🌐 UTC:\n{utc_data['utc_date']} {utc_data['utc_time']}\n\n"
+        f"🪐 Julian Date:\n{jd:.5f}\n\n"
+        f"📊 Планеты:\n{planets_text}\n\n"
+        f"🔺 Аспекты:\n{aspects_text}",
         reply_markup=get_profile_menu()
     )
 
