@@ -15,6 +15,12 @@ from services.calendar_png import create_calendar_png
 router = Router()
 
 
+# ✅ DEBUG — ловит ВСЁ (временно!)
+@router.message()
+async def debug_all(message: Message):
+    print("DEBUG TEXT:", message.text)
+
+
 # ✅ Вход в финансы
 @router.message(F.text == "📅 Финансы")
 async def finance_menu(message: Message):
@@ -33,27 +39,24 @@ async def back_to_menu(message: Message):
     )
 
 
-# ✅ Календарь
+# ✅ Календарь (будем править после DEBUG)
 @router.message(F.text == "📅 Календарь")
 async def finance_calendar(message: Message):
-    print("clicked calendar")  # DEBUG
+    print("CLICKED CALENDAR")
 
     try:
-        # ✅ получаем пользователя
         user = get_user(message.from_user.id)
 
         if not user:
             await message.answer("❌ Сначала заполните профиль")
             return
 
-        # ✅ получаем город
         city_data = get_city(user["city_name"])
 
         if not city_data:
             await message.answer("❌ Ошибка города")
             return
 
-        # ✅ перевод в UTC
         utc_data = convert_to_utc(
             user["birth_date"],
             user["birth_time"],
@@ -64,31 +67,26 @@ async def finance_calendar(message: Message):
             await message.answer("❌ Ошибка времени")
             return
 
-        # ✅ строим натальную карту
         chart = build_natal_chart(
             utc_data["datetime"],
             city_data["lat"],
             city_data["lon"]
         )
 
-        # ✅ текущий месяц
         now = datetime.now()
 
-        # ✅ строим календарь
         calendar_data = build_month_calendar(
             chart,
             now.year,
             now.month
         )
 
-        # ✅ создаём PNG
         path = create_calendar_png(
             calendar_data,
             now.year,
             now.month
         )
 
-        # ✅ отправляем файл
         await message.answer_photo(
             FSInputFile(path),
             caption="📅 Финансовый календарь"
