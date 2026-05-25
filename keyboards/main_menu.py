@@ -10,3 +10,13 @@ def get_main_menu():
         ],
         resize_keyboard=True
     )
+
+
+def get_finance_menu():
+    return ReplyKeyboardMarkup(
+        keyboard=[
+            [KeyboardButton(text="📅 Календарь")],
+            [KeyboardButton(text="⬅️ Назад")]
+        ],
+        resize_keyboard=True
+    )

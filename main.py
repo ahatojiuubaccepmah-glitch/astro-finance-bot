@@ -1,7 +1,7 @@
 import asyncio
 from aiogram import Bot, Dispatcher
 
-from handlers import start, menu, profile
+from handlers import start, menu, profile, finance
 from db.database import create_table   # ✅ добавили импорт
 
 TOKEN = "8788138114:AAGQ1SgMRpxTrHg9RggWzu2gZgcDEqtZNRw"
@@ -13,7 +13,7 @@ dp = Dispatcher()
 dp.include_router(start.router)
 dp.include_router(profile.router)
 dp.include_router(menu.router)
-
+dp.include_router(finance.router)
 
 async def main():
     create_table()   # ✅ ВОТ ЗДЕСЬ
