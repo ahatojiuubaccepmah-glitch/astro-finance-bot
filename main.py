@@ -4,7 +4,7 @@ from aiogram import Bot, Dispatcher
 from handlers import start, menu, profile
 from db.database import create_table   # ✅ добавили импорт
 
-TOKEN = "ТВОЙ_ТОКЕН"
+TOKEN = "8788138114:AAHnpHY8zzZy_ENvSWb9KwjchtVyJfH_7QM"
 
 bot = Bot(token=TOKEN)
 dp = Dispatcher()
