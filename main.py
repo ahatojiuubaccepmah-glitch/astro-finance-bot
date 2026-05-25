@@ -5,7 +5,7 @@ from handlers import start, menu, profile
 from handlers import finance
 from db.database import create_table   # ✅ добавили импорт
 
-TOKEN = "8788138114:AAGQ1SgMRpxTrHg9RggWzu2gZgcDEqtZNRw"
+TOKEN = "8788138114:AAHBV2v8ld_KN49gmGMeR0AVNTnF_JywcLM"
 
 bot = Bot(token=TOKEN)
 dp = Dispatcher()
