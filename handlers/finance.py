@@ -31,7 +31,7 @@ async def back_to_menu(message: Message):
 
 
 # ✅ Календарь (будем править после DEBUG)
-@router.message(F.text == "📅 Календарь")
+@router.message(F.text == "📆 Календарь")
 async def finance_calendar(message: Message):
     print("CLICKED CALENDAR")
 
