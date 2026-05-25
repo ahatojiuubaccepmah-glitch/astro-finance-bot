@@ -2,10 +2,13 @@ from aiogram import Router, F
 from aiogram.types import Message
 
 from keyboards.main_menu import get_main_menu
+from keyboards.finance_menu import get_finance_menu
+from keyboards.natal_menu import get_natal_menu
 
 router = Router()
 
 
+# ✅ назад в главное меню
 @router.message(F.text == "⬅️ Назад")
 async def back_to_main(message: Message):
     await message.answer(
@@ -14,11 +17,34 @@ async def back_to_main(message: Message):
     )
 
 
+# ✅ вход в финансы
+@router.message(F.text == "📅 Финансы")
+async def open_finance(message: Message):
+    await message.answer(
+        "Раздел финансов",
+        reply_markup=get_finance_menu()
+    )
+
+
+# ✅ вход в натальную карту
+@router.message(F.text == "🔮 Натальная карта")
+async def open_natal(message: Message):
+    await message.answer(
+        "Раздел натальной карты",
+        reply_markup=get_natal_menu()
+    )
+
+
+# ✅ обработка кнопок (пока заглушки)
 @router.message(F.text)
 async def menu_handler(message: Message):
     text = message.text
 
-    if text == "📅 Финансы":
-        await message.answer("Раздел финансов (скоро)")
-    elif text == "🔮 Натальная карта":
-        await message.answer("Раздел натальной карты (скоро)")
+    if text == "📊 Прогноз":
+        await message.answer("Будет реализовано позже")
+    elif text == "💰 Удачные дни":
+        await message.answer("Будет реализовано позже")
+    elif text == "🪐 Рассчитать карту":
+        await message.answer("Будет реализовано позже")
+    elif text == "📊 Аспекты":
+        await message.answer("Будет реализовано позже")
