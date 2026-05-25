@@ -1,7 +1,8 @@
 import asyncio
 from aiogram import Bot, Dispatcher
 
-from handlers import start, menu, profile, finance
+from handlers import start, menu, profile
+from handlers import finance
 from db.database import create_table   # ✅ добавили импорт
 
 TOKEN = "8788138114:AAGQ1SgMRpxTrHg9RggWzu2gZgcDEqtZNRw"

@@ -37,6 +37,7 @@ async def back_to_menu(message: Message):
 # ✅ Календарь
 @router.message(F.text == "📅 Календарь")
 async def finance_calendar(message: Message):
+	print("clicked calendar")
 
     user = get_user(message.from_user.id)
 
