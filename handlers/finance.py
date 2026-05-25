@@ -37,7 +37,7 @@ async def back_to_menu(message: Message):
 # ✅ Календарь
 @router.message(F.text == "📅 Календарь")
 async def finance_calendar(message: Message):
-	print("clicked calendar")
+    print("clicked calendar")
 
     user = get_user(message.from_user.id)
 
@@ -45,7 +45,9 @@ async def finance_calendar(message: Message):
         await message.answer("❌ Сначала заполните профиль")
         return
 
-    city_data = get_city(user["city_name"])
+    city_Ы
+
+data = get_city(user["city_name"])
 
     if not city_data:
         await message.answer("❌ Ошибка города")
