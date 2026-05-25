@@ -1,20 +1,22 @@
 import asyncio
 from aiogram import Bot, Dispatcher
-from handlers import profile
-from handlers import start, menu
 
-TOKEN = "8788138114:AAHnpHY8zzZy_ENvSWb9KwjchtVyJfH_7QM"
+from handlers import start, menu, profile
+from db.database import create_table   # ✅ добавили импорт
+
+TOKEN = "ТВОЙ_ТОКЕН"
 
 bot = Bot(token=TOKEN)
 dp = Dispatcher()
 
-# ✅ подключаем роутеры
+# ✅ подключение handlers
 dp.include_router(start.router)
 dp.include_router(profile.router)
 dp.include_router(menu.router)
 
 
 async def main():
+    create_table()   # ✅ ВОТ ЗДЕСЬ
     await dp.start_polling(bot)
 
 

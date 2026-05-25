@@ -5,6 +5,7 @@ from aiogram.fsm.state import StatesGroup, State
 import re
 
 from keyboards.profile_menu import get_profile_menu
+from db.database import save_user, get_user
 
 router = Router()
 
@@ -35,17 +36,17 @@ def normalize_date(date: str) -> str:
         return date
 
 
-# ✅ ПРОФИЛЬ (Теперь с проверкой)
+# ✅ ПРОФИЛЬ (теперь из БД)
 @router.message(F.text == "👤 Профиль")
-async def profile_handler(message: Message, state: FSMContext):
-    data = await state.get_data()
+async def profile_handler(message: Message):
+    user = get_user(message.from_user.id)
 
-    if data:
+    if user:
         await message.answer(
             f"📄 Ваш профиль:\n\n"
-            f"📅 Дата: {data.get('birth_date')}\n"
-            f"⏰ Время: {data.get('birth_time')}\n"
-            f"🌍 Город: {data.get('city')}",
+            f"📅 Дата: {user['birth_date']}\n"
+            f"⏰ Время: {user['birth_time']}\n"
+            f"🌍 Город: {user['city']}",
             reply_markup=get_profile_menu()
         )
     else:
@@ -112,7 +113,7 @@ async def process_birth_time(message: Message, state: FSMContext):
     await state.set_state(ProfileForm.city)
 
 
-# ✅ город + финал
+# ✅ город → сохраняем в БД
 @router.message(ProfileForm.city)
 async def process_city(message: Message, state: FSMContext):
     city = message.text.strip()
@@ -125,6 +126,14 @@ async def process_city(message: Message, state: FSMContext):
 
     data = await state.get_data()
 
+    # ✅ сохраняем в БД
+    save_user(
+        user_id=message.from_user.id,
+        birth_date=data["birth_date"],
+        birth_time=data["birth_time"],
+        city=data["city"]
+    )
+
     await message.answer(
         f"✅ Профиль сохранён\n\n"
         f"📅 Дата: {data['birth_date']}\n"
@@ -133,4 +142,4 @@ async def process_city(message: Message, state: FSMContext):
         reply_markup=get_profile_menu()
     )
 
-    # ❗ НЕ очищаем state → данные остаются
+    await state.clear()
