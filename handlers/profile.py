@@ -5,7 +5,8 @@ from aiogram.fsm.state import StatesGroup, State
 import re
 
 from keyboards.profile_menu import get_profile_menu
-from db.database import save_user, get_user
+from db.database import save_user, get_user, get_city, save_city
+from services.geocoder import geocode_city
 
 router = Router()
 
@@ -19,13 +20,11 @@ class ProfileForm(StatesGroup):
 
 # ✅ Валидация
 def validate_date(date: str) -> bool:
-    pattern = r"^\d{2}\.\d{2}\.\d{4}$"
-    return bool(re.match(pattern, date))
+    return bool(re.match(r"^\d{2}\.\d{2}\.\d{4}$", date))
 
 
 def validate_time(time: str) -> bool:
-    pattern = r"^\d{2}:\d{2}$"
-    return bool(re.match(pattern, time))
+    return bool(re.match(r"^\d{2}:\d{2}$", time))
 
 
 def normalize_date(date: str) -> str:
@@ -36,7 +35,7 @@ def normalize_date(date: str) -> str:
         return date
 
 
-# ✅ ПРОФИЛЬ (теперь из БД)
+# ✅ ПРОФИЛЬ (теперь с координатами)
 @router.message(F.text == "👤 Профиль")
 async def profile_handler(message: Message):
     user = get_user(message.from_user.id)
@@ -46,7 +45,9 @@ async def profile_handler(message: Message):
             f"📄 Ваш профиль:\n\n"
             f"📅 Дата: {user['birth_date']}\n"
             f"⏰ Время: {user['birth_time']}\n"
-            f"🌍 Город: {user['city']}",
+            f"🌍 Город: {user['city']}\n"
+            f"📍 Широта: {user['lat']}\n"
+            f"📍 Долгота: {user['lon']}",
             reply_markup=get_profile_menu()
         )
     else:
@@ -76,15 +77,13 @@ async def process_birth_date(message: Message, state: FSMContext):
             if not validate_date(date):
                 raise ValueError
         except:
-            await message.answer(
-                "❌ Неверный формат даты\n\nВведите так: 01.01.2000"
-            )
+            await message.answer("❌ Неверный формат даты\nВведите: 01.01.2000")
             return
 
     await state.update_data(birth_date=date)
 
     await message.answer(
-        "⏰ Введите время\n\nПример: 14:30\n\nили напишите: не знаю"
+        "⏰ Введите время\n\nПример: 14:30\nили напишите: не знаю"
     )
 
     await state.set_state(ProfileForm.birth_time)
@@ -99,21 +98,17 @@ async def process_birth_time(message: Message, state: FSMContext):
         time = "12:00"
     else:
         if not validate_time(time):
-            await message.answer(
-                "❌ Неверный формат времени\n\nВведите так: 14:30"
-            )
+            await message.answer("❌ Неверный формат времени\nВведите: 14:30")
             return
 
     await state.update_data(birth_time=time)
 
-    await message.answer(
-        "🌍 Введите город рождения\n\nПример: Москва"
-    )
+    await message.answer("🌍 Введите город рождения")
 
     await state.set_state(ProfileForm.city)
 
 
-# ✅ город → сохраняем в БД
+# ✅ город + геокодер
 @router.message(ProfileForm.city)
 async def process_city(message: Message, state: FSMContext):
     city = message.text.strip()
@@ -122,23 +117,37 @@ async def process_city(message: Message, state: FSMContext):
         await message.answer("❌ Введите нормальный город")
         return
 
-    await state.update_data(city=city)
+    # ✅ пробуем найти в кэше
+    geo = get_city(city)
+
+    if not geo:
+        geo = geocode_city(city)
+
+        if not geo:
+            await message.answer("❌ Не удалось найти город")
+            return
+
+        save_city(city, geo["lat"], geo["lon"])
 
     data = await state.get_data()
 
-    # ✅ сохраняем в БД
+    # ✅ сохраняем всё
     save_user(
         user_id=message.from_user.id,
         birth_date=data["birth_date"],
         birth_time=data["birth_time"],
-        city=data["city"]
+        city=city,
+        lat=geo["lat"],
+        lon=geo["lon"]
     )
 
     await message.answer(
         f"✅ Профиль сохранён\n\n"
         f"📅 Дата: {data['birth_date']}\n"
         f"⏰ Время: {data['birth_time']}\n"
-        f"🌍 Город: {data['city']}",
+        f"🌍 Город: {city}\n"
+        f"📍 Широта: {geo['lat']}\n"
+        f"📍 Долгота: {geo['lon']}",
         reply_markup=get_profile_menu()
     )
 
