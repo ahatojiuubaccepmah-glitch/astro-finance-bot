@@ -16,37 +16,46 @@ class ProfileForm(StatesGroup):
     city = State()
 
 
-# ✅ Валидация даты
+# ✅ Валидация
 def validate_date(date: str) -> bool:
     pattern = r"^\d{2}\.\d{2}\.\d{4}$"
     return bool(re.match(pattern, date))
 
 
-# ✅ Валидация времени
 def validate_time(time: str) -> bool:
     pattern = r"^\d{2}:\d{2}$"
     return bool(re.match(pattern, time))
 
 
-# ✅ Нормализация даты (1.1.2000 → 01.01.2000)
 def normalize_date(date: str) -> str:
-    parts = date.split(".")
-    if len(parts) == 3:
-        d, m, y = parts
+    try:
+        d, m, y = date.split(".")
         return f"{int(d):02}.{int(m):02}.{y}"
-    return date
+    except:
+        return date
 
 
-# ✅ Профиль
+# ✅ ПРОФИЛЬ (Теперь с проверкой)
 @router.message(F.text == "👤 Профиль")
-async def profile_handler(message: Message):
-    await message.answer(
-        "📄 Профиль пока пуст",
-        reply_markup=get_profile_menu()
-    )
+async def profile_handler(message: Message, state: FSMContext):
+    data = await state.get_data()
+
+    if data:
+        await message.answer(
+            f"📄 Ваш профиль:\n\n"
+            f"📅 Дата: {data.get('birth_date')}\n"
+            f"⏰ Время: {data.get('birth_time')}\n"
+            f"🌍 Город: {data.get('city')}",
+            reply_markup=get_profile_menu()
+        )
+    else:
+        await message.answer(
+            "📄 Профиль пока пуст",
+            reply_markup=get_profile_menu()
+        )
 
 
-# ✅ Старт редактирования
+# ✅ старт редактирования
 @router.message(F.text == "✏️ Редактировать")
 async def start_profile_edit(message: Message, state: FSMContext):
     await message.answer(
@@ -55,13 +64,12 @@ async def start_profile_edit(message: Message, state: FSMContext):
     await state.set_state(ProfileForm.birth_date)
 
 
-# ✅ Ввод даты
+# ✅ дата
 @router.message(ProfileForm.birth_date)
 async def process_birth_date(message: Message, state: FSMContext):
     date = message.text.strip()
 
     if not validate_date(date):
-        # пробуем нормализовать
         try:
             date = normalize_date(date)
             if not validate_date(date):
@@ -75,14 +83,13 @@ async def process_birth_date(message: Message, state: FSMContext):
     await state.update_data(birth_date=date)
 
     await message.answer(
-        "⏰ Введите время рождения\n\nПример: 14:30\n\n"
-        "Если не знаете — напишите: не знаю"
+        "⏰ Введите время\n\nПример: 14:30\n\nили напишите: не знаю"
     )
 
     await state.set_state(ProfileForm.birth_time)
 
 
-# ✅ Ввод времени
+# ✅ время
 @router.message(ProfileForm.birth_time)
 async def process_birth_time(message: Message, state: FSMContext):
     time = message.text.strip().lower()
@@ -92,8 +99,7 @@ async def process_birth_time(message: Message, state: FSMContext):
     else:
         if not validate_time(time):
             await message.answer(
-                "❌ Неверный формат времени\n\nВведите так: 14:30\n"
-                "Или напишите: не знаю"
+                "❌ Неверный формат времени\n\nВведите так: 14:30"
             )
             return
 
@@ -106,13 +112,13 @@ async def process_birth_time(message: Message, state: FSMContext):
     await state.set_state(ProfileForm.city)
 
 
-# ✅ Ввод города и завершение
+# ✅ город + финал
 @router.message(ProfileForm.city)
 async def process_city(message: Message, state: FSMContext):
     city = message.text.strip()
 
     if len(city) < 2:
-        await message.answer("❌ Введите нормальное название города")
+        await message.answer("❌ Введите нормальный город")
         return
 
     await state.update_data(city=city)
@@ -127,4 +133,4 @@ async def process_city(message: Message, state: FSMContext):
         reply_markup=get_profile_menu()
     )
 
-    await state.clear()
+    # ❗ НЕ очищаем state → данные остаются
