@@ -11,10 +11,11 @@ bot = Bot(token=TOKEN)
 dp = Dispatcher()
 
 # ✅ подключение handlers
+dp.include_router(finance.router)
 dp.include_router(start.router)
 dp.include_router(profile.router)
 dp.include_router(menu.router)
-dp.include_router(finance.router)
+
 
 async def main():
     create_table()   # ✅ ВОТ ЗДЕСЬ
