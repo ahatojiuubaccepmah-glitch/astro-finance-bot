@@ -13,4 +13,3 @@ async def start_handler(message: Message):
         "Добро пожаловать 🚀",
         reply_markup=get_main_menu()
     )
-``
