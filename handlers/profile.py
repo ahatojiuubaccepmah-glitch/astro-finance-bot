@@ -166,6 +166,8 @@ async def process_city(message: Message, state: FSMContext):
         city_data["timezone"]
     )
 
+    jd = to_julian_date(utc_data["datetime"])
+
     await message.answer(
         f"✅ Профиль сохранён\n\n"
         f"📅 {data['birth_date']}\n"
