@@ -90,6 +90,7 @@ async def start_profile_edit(message: Message, state: FSMContext):
 	"📅 Введите дату рождения\n\n"
 	"Формат: ДД.ММ.ГГГГ\n"
 	"Пример: 01.01.2000"
+	)
     await state.set_state(ProfileForm.birth_date)
 
 
