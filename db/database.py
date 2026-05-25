@@ -17,11 +17,12 @@ def create_table():
         birth_time TEXT,
         city TEXT,
         lat REAL,
-        lon REAL
+        lon REAL,
+        timezone TEXT
     )
     """)
 
-    # ✅ города (кэш)
+    # ✅ города
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS cities (
         name TEXT PRIMARY KEY,
@@ -34,33 +35,32 @@ def create_table():
     conn.close()
 
 
-# ✅ сохранить пользователя
-def save_user(user_id, birth_date, birth_time, city, lat, lon):
+def save_user(user_id, birth_date, birth_time, city, lat, lon, timezone):
     conn = get_connection()
     cursor = conn.cursor()
 
     cursor.execute("""
-    INSERT INTO users (user_id, birth_date, birth_time, city, lat, lon)
-    VALUES (?, ?, ?, ?, ?, ?)
+    INSERT INTO users (user_id, birth_date, birth_time, city, lat, lon, timezone)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
     ON CONFLICT(user_id) DO UPDATE SET
         birth_date=excluded.birth_date,
         birth_time=excluded.birth_time,
         city=excluded.city,
         lat=excluded.lat,
-        lon=excluded.lon
-    """, (user_id, birth_date, birth_time, city, lat, lon))
+        lon=excluded.lon,
+        timezone=excluded.timezone
+    """, (user_id, birth_date, birth_time, city, lat, lon, timezone))
 
     conn.commit()
     conn.close()
 
 
-# ✅ получить пользователя
 def get_user(user_id):
     conn = get_connection()
     cursor = conn.cursor()
 
     cursor.execute("""
-        SELECT birth_date, birth_time, city, lat, lon 
+        SELECT birth_date, birth_time, city, lat, lon, timezone
         FROM users WHERE user_id = ?
     """, (user_id,))
 
@@ -73,13 +73,13 @@ def get_user(user_id):
             "birth_time": result[1],
             "city": result[2],
             "lat": result[3],
-            "lon": result[4]
+            "lon": result[4],
+            "timezone": result[5]
         }
 
     return None
 
 
-# ✅ получить город из кэша
 def get_city(city_name):
     conn = get_connection()
     cursor = conn.cursor()
@@ -95,7 +95,6 @@ def get_city(city_name):
     return None
 
 
-# ✅ сохранить город
 def save_city(city_name, lat, lon):
     conn = get_connection()
     cursor = conn.cursor()
