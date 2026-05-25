@@ -61,7 +61,7 @@ async def profile_handler(message: Message):
         city_data["timezone"]
     )
 
-    jd = to_julian_date(utc_data["datetime"]
+    jd = to_julian_date(utc_data["datetime"])
 
     await message.answer(
         f"📄 Ваш профиль:\n\n"
