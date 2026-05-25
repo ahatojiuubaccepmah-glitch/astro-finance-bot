@@ -9,4 +9,3 @@ def get_finance_menu():
         ],
         resize_keyboard=True
     )
-``
