@@ -2,7 +2,8 @@ from aiogram import Router, F
 from aiogram.types import Message
 from datetime import datetime
 
-from keyboards.menu import get_main_menu, get_finance_menu
+from keyboards.main_menu import get_main_menu
+from keyboards.finance_menu import get_finance_menu
 from db.database import get_user, get_city
 
 from services.time_converter import convert_to_utc
