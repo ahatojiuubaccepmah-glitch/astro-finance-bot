@@ -20,7 +20,7 @@ class ProfileForm(StatesGroup):
     city = State()
 
 
-# ✅ валидация
+# ✅ Валидация
 def validate_date(date: str) -> bool:
     return bool(re.match(r"^\d{2}\.\d{2}\.\d{4}$", date))
 
@@ -37,7 +37,7 @@ def normalize_date(date: str) -> str:
         return date
 
 
-# ✅ просмотр профиля
+# ✅ ПРОФИЛЬ
 @router.message(F.text == "👤 Профиль")
 async def profile_handler(message: Message):
     user = get_user(message.from_user.id)
@@ -55,12 +55,18 @@ async def profile_handler(message: Message):
         await message.answer("❌ Ошибка города")
         return
 
+    # ✅ UTC
     utc_data = convert_to_utc(
         user["birth_date"],
         user["birth_time"],
         city_data["timezone"]
     )
 
+    if not utc_data or "error" in utc_data:
+        await message.answer("❌ Ошибка времени")
+        return
+
+    # ✅ JD
     jd = to_julian_date(utc_data["datetime"])
 
     await message.answer(
@@ -71,19 +77,20 @@ async def profile_handler(message: Message):
         f"📍 {city_data['lat']} / {city_data['lon']}\n"
         f"🕒 {city_data['timezone']}\n\n"
         f"🌐 UTC:\n"
-        f"{utc_data['utc_date']} {utc_data['utc_time']}",
+        f"{utc_data['utc_date']} {utc_data['utc_time']}\n\n"
+        f"🪐 Julian Date:\n{jd:.5f}",
         reply_markup=get_profile_menu()
     )
 
 
-# ✅ старт
+# ✅ START
 @router.message(F.text == "✏️ Редактировать")
 async def start_profile_edit(message: Message, state: FSMContext):
     await message.answer("📅 Введите дату рождения")
     await state.set_state(ProfileForm.birth_date)
 
 
-# ✅ дата
+# ✅ ДАТА
 @router.message(ProfileForm.birth_date)
 async def process_birth_date(message: Message, state: FSMContext):
     date = message.text.strip()
@@ -103,7 +110,7 @@ async def process_birth_date(message: Message, state: FSMContext):
     await state.set_state(ProfileForm.birth_time)
 
 
-# ✅ время
+# ✅ ВРЕМЯ
 @router.message(ProfileForm.birth_time)
 async def process_birth_time(message: Message, state: FSMContext):
     time = message.text.strip().lower()
@@ -120,7 +127,7 @@ async def process_birth_time(message: Message, state: FSMContext):
     await state.set_state(ProfileForm.city)
 
 
-# ✅ город (главная логика)
+# ✅ ГОРОД
 @router.message(ProfileForm.city)
 async def process_city(message: Message, state: FSMContext):
     city = message.text.strip()
@@ -132,6 +139,7 @@ async def process_city(message: Message, state: FSMContext):
     # ✅ проверяем кэш
     city_data = get_city(city)
 
+    # ✅ если нет — геокодим
     if not city_data:
         geo = geocode_city(city)
 
@@ -141,7 +149,6 @@ async def process_city(message: Message, state: FSMContext):
 
         timezone = get_timezone(geo["lat"], geo["lon"])
 
-        # ✅ сохраняем в cities
         save_city(city, geo["lat"], geo["lon"], timezone)
 
         city_data = {
@@ -152,7 +159,7 @@ async def process_city(message: Message, state: FSMContext):
 
     data = await state.get_data()
 
-    # ✅ сохраняем пользователя (только ссылку)
+    # ✅ сохраняем пользователя
     save_user(
         message.from_user.id,
         data["birth_date"],
@@ -160,12 +167,14 @@ async def process_city(message: Message, state: FSMContext):
         city
     )
 
+    # ✅ UTC
     utc_data = convert_to_utc(
         data["birth_date"],
         data["birth_time"],
         city_data["timezone"]
     )
 
+    # ✅ JD
     jd = to_julian_date(utc_data["datetime"])
 
     await message.answer(
@@ -173,9 +182,10 @@ async def process_city(message: Message, state: FSMContext):
         f"📅 {data['birth_date']}\n"
         f"⏰ {data['birth_time']}\n"
         f"🌍 {city}\n"
-        f"🕒 {city_data['timezone']}\n"
-        f"🌐 {utc_data['utc_time']}",
-	f"🪐 Julian Date:\n{jd:.5f}",
+        f"🕒 {city_data['timezone']}\n\n"
+        f"🌐 UTC:\n"
+        f"{utc_data['utc_time']}\n\n"
+        f"🪐 Julian Date:\n{jd:.5f}",
         reply_markup=get_profile_menu()
     )
 
