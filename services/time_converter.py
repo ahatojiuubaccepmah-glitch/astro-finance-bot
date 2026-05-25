@@ -33,4 +33,3 @@ def convert_to_utc(date_str: str, time_str: str, timezone_str: str):
 
     except Exception:
         return None
-``
