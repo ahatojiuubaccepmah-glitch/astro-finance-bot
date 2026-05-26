@@ -15,7 +15,6 @@ from services.calendar_png import create_calendar_png
 router = Router()
 
 
-
 # ✅ Назад
 @router.message(F.text == "⬅️ Назад")
 async def back_to_menu(message: Message):
@@ -25,7 +24,7 @@ async def back_to_menu(message: Message):
     )
 
 
-# ✅ Календарь (будем править после DEBUG)
+# ✅ Календарь
 @router.message(F.text == "📆 Календарь")
 async def finance_calendar(message: Message):
     print("CLICKED CALENDAR")
