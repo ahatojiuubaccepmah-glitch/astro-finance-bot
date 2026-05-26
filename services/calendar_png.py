@@ -1,6 +1,14 @@
 from PIL import Image, ImageDraw, ImageFont
 import calendar
 
+# ✅ настройки
+CELL_SIZE = 90
+PADDING = 10
+
+WIDTH = CELL_SIZE * 7 + PADDING * 8
+HEIGHT = CELL_SIZE * 6 + 160
+
+# ✅ цвета
 COLORS = {
     "dark_green": (0, 120, 0),
     "light_green": (160, 235, 160),
@@ -9,9 +17,13 @@ COLORS = {
     "red": (255, 110, 110)
 }
 
-
-WIDTH = CELL_SIZE * 7 + PADDING * 8
-HEIGHT = CELL_SIZE * 6 + 160
+# ✅ месяцы на русском
+RU_MONTHS = [
+    "",
+    "ЯНВАРЬ", "ФЕВРАЛЬ", "МАРТ", "АПРЕЛЬ",
+    "МАЙ", "ИЮНЬ", "ИЮЛЬ", "АВГУСТ",
+    "СЕНТЯБРЬ", "ОКТЯБРЬ", "НОЯБРЬ", "ДЕКАБРЬ"
+]
 
 
 def draw_rounded_rect(draw, xy, radius, fill):
@@ -29,15 +41,6 @@ def draw_shadow(draw, xy):
     )
 
 
-# ✅ Русские названия месяцев
-RU_MONTHS = [
-    "",  # заглушка (индексация с 1)
-    "ЯНВАРЬ", "ФЕВРАЛЬ", "МАРТ", "АПРЕЛЬ",
-    "МАЙ", "ИЮНЬ", "ИЮЛЬ", "АВГУСТ",
-    "СЕНТЯБРЬ", "ОКТЯБРЬ", "НОЯБРЬ", "ДЕКАБРЬ"
-]
-
-
 def create_calendar_png(calendar_data, year: int, month: int, output_path="calendar.png"):
 
     img = Image.new("RGB", (WIDTH, HEIGHT), "white")
@@ -52,13 +55,12 @@ def create_calendar_png(calendar_data, year: int, month: int, output_path="calen
         font_day = None
         font_week = None
 
-    # ✅ Заголовок (русский)
+    # ✅ заголовок
     title = f"{RU_MONTHS[month]} {year}"
     draw.text((PADDING, 20), title, fill="black", font=font_title)
 
-    # ✅ Дни недели (русские)
+    # ✅ дни недели
     week_days = ["ПН", "ВТ", "СР", "ЧТ", "ПТ", "СБ", "ВС"]
-
     y_week = 70
 
     for i, wd in enumerate(week_days):
@@ -74,7 +76,7 @@ def create_calendar_png(calendar_data, year: int, month: int, output_path="calen
             font=font_week
         )
 
-    # ✅ карта дней
+    # ✅ дни
     day_map = {d["day"]: d["color"] for d in calendar_data}
 
     first_weekday, days_in_month = calendar.monthrange(year, month)
@@ -97,10 +99,8 @@ def create_calendar_png(calendar_data, year: int, month: int, output_path="calen
             color_key = day_map.get(day, "gray")
             color = COLORS.get(color_key, COLORS["gray"])
 
-            # ✅ тень
             draw_shadow(draw, (x, y, x + CELL_SIZE, y + CELL_SIZE))
 
-            # ✅ карточка
             draw_rounded_rect(
                 draw,
                 (x, y, x + CELL_SIZE, y + CELL_SIZE),
@@ -108,16 +108,15 @@ def create_calendar_png(calendar_data, year: int, month: int, output_path="calen
                 fill=color
             )
 
-            # ✅ номер дня
             text = str(day)
             bbox = draw.textbbox((0, 0), text, font=font_day)
 
-            text_w = bbox[2] - bbox[0]
-            text_h = bbox[3] - bbox[1]
+            tw = bbox[2] - bbox[0]
+            th = bbox[3] - bbox[1]
 
             draw.text(
-                (x + (CELL_SIZE - text_w) / 2,
-                 y + (CELL_SIZE - text_h) / 2),
+                (x + (CELL_SIZE - tw) / 2,
+                 y + (CELL_SIZE - th) / 2),
                 text,
                 fill="black",
                 font=font_day
@@ -128,10 +127,3 @@ def create_calendar_png(calendar_data, year: int, month: int, output_path="calen
     img.save(output_path)
 
     return output_path
-
-import calendar
-
-
-COLORS = {
-    "dark_green": (0, 120, 0),
-	}
