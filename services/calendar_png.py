@@ -134,3 +134,4 @@ import calendar
 
 COLORS = {
     "dark_green": (0, 120, 0),
+	}
