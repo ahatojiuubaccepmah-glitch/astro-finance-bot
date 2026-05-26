@@ -2,7 +2,7 @@ from PIL import Image, ImageDraw, ImageFontfrom PIL import Image (160, 235, 160)
     "gray": (230, 230, 230),
     "orange": (255, 185, 90),
     "red": (255, 110, 110)
-}
+
 
 CELL_SIZE = 90
 PADDING = 10
