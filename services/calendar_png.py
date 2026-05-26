@@ -1,11 +1,14 @@
-from PIL import Image, ImageDraw, ImageFontfrom PIL import Image (160, 235, 160),
+from PIL import Image, ImageDraw, ImageFont
+import calendar
+
+COLORS = {
+    "dark_green": (0, 120, 0),
+    "light_green": (160, 235, 160),
     "gray": (230, 230, 230),
     "orange": (255, 185, 90),
     "red": (255, 110, 110)
+}
 
-
-CELL_SIZE = 90
-PADDING = 10
 
 WIDTH = CELL_SIZE * 7 + PADDING * 8
 HEIGHT = CELL_SIZE * 6 + 160
