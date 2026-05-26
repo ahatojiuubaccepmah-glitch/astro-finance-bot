@@ -33,18 +33,3 @@ async def open_natal(message: Message):
         "Раздел натальной карты",
         reply_markup=get_natal_menu()
     )
-
-
-# ✅ обработка кнопок (пока заглушки)
-@router.message(F.text)
-async def menu_handler(message: Message):
-    text = message.text
-
-    if text == "📊 Прогноз":
-        await message.answer("Будет реализовано позже")
-    elif text == "💰 Удачные дни":
-        await message.answer("Будет реализовано позже")
-    elif text == "🪐 Рассчитать карту":
-        await message.answer("Будет реализовано позже")
-    elif text == "📊 Аспекты":
-        await message.answer("Будет реализовано позже")
