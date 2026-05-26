@@ -24,7 +24,7 @@ async def back_to_menu(message: Message):
 
 
 # ✅ DEBUG КАЛЕНДАРЯ
-@router.message(F.text == "📆 Календарь")
+@router.message(F.text == "Календарь")
 async def finance_calendar(message: Message):
     print("STEP 0: handler triggered")
     await message.answer("STEP 0 ✅ Кнопка нажата")
