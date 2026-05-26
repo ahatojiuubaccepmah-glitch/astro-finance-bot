@@ -128,7 +128,7 @@ def create_calendar_png(calendar_data, year: int, month: int, output_path="calen
     img.save(output_path)
 
     return output_path
-``
+
 import calendar
 
 
