@@ -1,16 +1,28 @@
+import os
 import asyncio
+
+from dotenv import load_dotenv
 from aiogram import Bot, Dispatcher
 
-from handlers import start, menu, profile
-from handlers import finance
-from db.database import create_table   # ✅ добавили импорт
+from handlers import start, menu, profile, finance
+from db.database import create_table
 
-TOKEN = "8788138114:AAHBV2v8ld_KN49gmGMeR0AVNTnF_JywcLM"
+
+# ✅ загружаем .env
+load_dotenv()
+
+TOKEN = os.getenv("BOT_TOKEN")
+
+# ✅ проверка (очень важно)
+if not TOKEN:
+    raise ValueError("❌ BOT_TOKEN не найден в .env")
+
 
 bot = Bot(token=TOKEN)
 dp = Dispatcher()
 
-# ✅ подключение handlers
+
+# ✅ подключение роутеров
 dp.include_router(finance.router)
 dp.include_router(start.router)
 dp.include_router(profile.router)
@@ -18,9 +30,10 @@ dp.include_router(menu.router)
 
 
 async def main():
-    create_table()   # ✅ ВОТ ЗДЕСЬ
+    create_table()
     await dp.start_polling(bot)
 
 
+# ✅ точка входа (исправлено)
 if __name__ == "__main__":
     asyncio.run(main())
